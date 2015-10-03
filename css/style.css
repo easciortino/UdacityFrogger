@@ -1,3 +1,6 @@
 body {
     text-align: center;
+	background-color: gainsboro;
+	font-family: "Lucida Console", monospace;
+	color: white;
 }

@@ -92,10 +92,12 @@ var Engine = (function(global) {
      * render methods.
      */
     function updateEntities(dt) {
+	if (!gameProperties.gamePaused){
         allEnemies.forEach(function(enemy) {
             enemy.update(dt);
         });
         player.update();
+	}
     }
 
     function updateExtras() {
@@ -143,7 +145,7 @@ var Engine = (function(global) {
             }
         }
 
-	renderExtras();
+	
         renderEntities();
         
     }
@@ -156,17 +158,30 @@ var Engine = (function(global) {
         /* Loop through all of the objects within the allEnemies array and call
          * the render function you have defined.
          */
-        allEnemies.forEach(function(enemy) {
-            enemy.render();
-        });
+	if (!gameProperties.gameStarted){
+		
+		startMenu.render();
+		
+	}else{
+		allExtras.forEach(function(extra){
+            		extra.render();
+        	});
+        	allEnemies.forEach(function(enemy) {
+            		enemy.render();
+        	});
 
-        player.render();
+	}
+	
+	player.render();
+
+	if (gameProperties.gamePaused){
+		pauseMenu.render();
+	}
+
     }
 
     function renderExtras(){
-        allExtras.forEach(function(extra){
-            extra.render();
-        });
+
     }
 
     /* This function does nothing but it could have been a good place to
@@ -196,7 +211,11 @@ var Engine = (function(global) {
 	'images/GemOrange.png',
 	'images/Key.png',
 	'images/Star.png',
-	'images/game-over.png'
+	'images/game-over.png',
+	'images/GemOrangeMini.png',
+	'images/GemBlueMini.png',
+	'images/GemGreenMini.png',
+	'images/water-blockMini.png'
     ]);
     Resources.onReady(init);
 
