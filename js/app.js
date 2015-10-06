@@ -357,7 +357,7 @@ var GameProperties = function(){
 
 	this.sounds = {
 		enemy: new Audio('sounds/button-10.wav'),
-		extra: new Audio('sounds/magic-chime-02.wav'),
+		extra: new Audio('sounds/button-37.wav'),
 		water: new Audio('sounds/button-09.wav')
 	};
 
