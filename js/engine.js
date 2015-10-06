@@ -101,9 +101,7 @@ var Engine = (function(global) {
     }
 
     function updateExtras() {
-        allExtras.forEach(function(extra) {
-            extra.update();
-        });
+        currentExtra.update();
     }
 
     /* This function initially draws the "game level", it will then call
@@ -147,6 +145,7 @@ var Engine = (function(global) {
 
 	
         renderEntities();
+	gameProperties.renderScore();
         
     }
 
@@ -163,9 +162,7 @@ var Engine = (function(global) {
 		startMenu.render();
 		
 	}else{
-		allExtras.forEach(function(extra){
-            		extra.render();
-        	});
+		currentExtra.render();
         	allEnemies.forEach(function(enemy) {
             		enemy.render();
         	});

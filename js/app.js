@@ -21,7 +21,8 @@ var Enemy = function(row) {
 
 
 	this.x_min = PLAYABLE_COLUMNS[0]-150;
-	this.x_max = PLAYABLE_COLUMNS[PLAYABLE_COLUMNS.length-1]+150;	
+	this.x_max = PLAYABLE_COLUMNS[PLAYABLE_COLUMNS.length-1]+150;
+	
     // The image/sprite for our enemies, this uses
     // a helper we've provided to easily load images
     this.sprite = 'images/enemy-bug.png';
@@ -40,21 +41,10 @@ Enemy.prototype.update = function(dt) {
 	if (this.x > this.x_max){
 		this.reset();
 	}
-
-	if (player.x >= this.x - COLLISION_BUFFER_X && player.x <= this.x + COLLISION_BUFFER_X){
-	    if (player.y >= this.y - COLLISION_BUFFER_Y && player.y <= this.y + COLLISION_BUFFER_Y){
-		if (gameProperties.currentScore > gameProperties.highScore){
-			gameProperties.highScore = gameProperties.currentScore;
-		}
-		gameProperties.currentScore = 0;
-		allExtras.pop();
-		allExtras.push(new Extra(80, 200));
-	        player.x = player.default_x;
-	        player.y = player.default_y;
-	    }
-	}
+	
+	this.checkCollision();
+	
 };
-
 
 
 // Draw the enemy on the screen, required method for game
@@ -63,12 +53,22 @@ Enemy.prototype.render = function() {
     ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
 };
 
+
+// Reset the enemy once it moves off the screen.  Resets both speed and position
+
 Enemy.prototype.reset = function(){
 	this.x = this.x_min;
 	this.speed = moveable_speeds[Math.floor(Math.random()*moveable_speeds.length)];
 };
 
 
+Enemy.prototype.checkCollision = function(){
+	if (player.x >= this.x - COLLISION_BUFFER_X && player.x <= this.x + COLLISION_BUFFER_X){
+	    if (player.y >= this.y - COLLISION_BUFFER_Y && player.y <= this.y + COLLISION_BUFFER_Y){
+		gameProperties.enemyCollision();
+	    }
+	}
+};
 
 
 
@@ -106,8 +106,7 @@ Player.prototype.handleInput = function(key){
 	if (key === 'up'){
 		this.y -= 83;
 		if (this.y < this.y_min){
-			gameProperties.currentScore += 30;
-			this.reset();
+			gameProperties.waterCollision();
 		}
 	}else if (key === 'down' && this.y < this.y_max){
 		this.y += 83;
@@ -125,7 +124,6 @@ Player.prototype.reset = function(){
 	if (!gameProperties.gameStarted){
 		gameProperties.currentPlayer = 0;
 	}
-
 };
 
 
@@ -137,11 +135,13 @@ var Extra = function(){
 };
 
 Extra.prototype.update = function(){
+	this.checkCollision();
+};
+
+Extra.prototype.checkCollision = function(){
 	if (player.x >= this.x - 50 && player.x <= this.x + 50){
 	    if (player.y >= this.y - 40 && player.y <= this.y + 40){
-		gameProperties.currentScore += this.value;
-		allExtras.pop();
-		allExtras.push(new Extra());
+		gameProperties.extraCollision();
 	    }
 	}
 };
@@ -150,7 +150,6 @@ Extra.prototype.reset = function(){
 	this.sprite = gameProperties.availableExtras[Math.floor(Math.random()*3)];
 	this.x = PLAYABLE_COLUMNS[Math.floor(Math.random()*5)];
 	this.y = PLAYABLE_ROWS[Math.floor(Math.random()*3)];
-	this.value = this.getValue();
 };
 
 Extra.prototype.getValue = function(){
@@ -274,8 +273,6 @@ StartMenu.prototype.handleInput = function(key){
 		gameProperties.setDifficulty();
 	}
 
-	console.log(gameProperties.currentDifficulty);
-
 };
 
 var PauseMenu = function(){
@@ -319,6 +316,8 @@ PauseMenu.prototype.handleInput = function(key){
 		gameProperties.gameStarted = false;
 		gameProperties.gamePaused = false;
 		player.reset();
+		gameProperties.currentScore = 0;
+		gameProperties.highScore = 0;
 	}
 
 };
@@ -356,6 +355,12 @@ var GameProperties = function(){
 		3: 'Hard'
 	};
 
+	this.sounds = {
+		enemy: new Audio('sounds/button-10.wav'),
+		extra: new Audio('sounds/magic-chime-02.wav'),
+		water: new Audio('sounds/water-splash-2.wav')
+	};
+
 	this.currentScore = 0;
 	this.highScore = 0;
 	
@@ -372,21 +377,52 @@ for (var i = 0; i < this.currentDifficulty; i++){
 };
 
 GameProperties.prototype.renderScore = function(){
+	ctx.fillStyle = 'white';	
+	ctx.font = '15pt Courier, sans-serif';
+	ctx.textAlign = 'left';
+	
+	if (gameProperties.currentScore > 0){
+		ctx.fillText('SCORE: ' + gameProperties.currentScore, 10, 570);
+	}
+
+	
+	ctx.textAlign = 'right';
+	if (gameProperties.highScore > 0){
+		ctx.fillText('HIGH SCORE: ' + gameProperties.highScore, ctx.canvas.width - 10, 570);
+	}
 
 };
 
-GameProperties.prototype.renderBackground = function(){
-
-};
-
-GameProperties.prototype.adjustScore = function(event){
-
-};
 
 GameProperties.prototype.resetScore = function(){
 	this.currentScore = 0;
 };
 
+GameProperties.prototype.enemyCollision = function(){
+	this.sounds.enemy.play();
+	if (gameProperties.currentScore > gameProperties.highScore){
+		gameProperties.highScore = gameProperties.currentScore;
+	}
+	gameProperties.currentScore = 0;
+
+	currentExtra.reset();
+	player.reset();
+
+};
+
+GameProperties.prototype.extraCollision = function(){
+	this.sounds.extra.play();
+	gameProperties.currentScore += currentExtra.getValue();
+	currentExtra.reset();
+
+};
+
+GameProperties.prototype.waterCollision = function(){
+	this.sounds.water.play();
+	gameProperties.currentScore += 30;
+	player.reset();
+
+};
 
 
 // Now instantiate your objects.
@@ -397,14 +433,10 @@ var gameProperties = new GameProperties();
 var startMenu = new StartMenu();
 var pauseMenu = new PauseMenu();
 var allEnemies = [];
-var allExtras = [];
+var currentExtra = new Extra();
 gameProperties.setDifficulty();
 
 var player = new Player(205, 440, 400, 65, 440, 50);
-
-allExtras.push(new Extra());
-
-
 
 // This listens for key presses and sends the keys to your
 // Player.handleInput() method. You don't need to modify this.
