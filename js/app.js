@@ -1,27 +1,22 @@
-var PLAYABLE_ROWS = [120, 203, 286];
-var PLAYABLE_COLUMNS = [0, 101, 202, 303, 404];
-var COLLISION_BUFFER_X = 60;
-var COLLISION_BUFFER_Y = 60;
-var moveable_speeds = [350, 300, 275, 250, 200, 175, 150, 100, 70];
-
-var GamePiece = function(){
-	this.x = PLAYABLE_COLUMNS[Math.floor(Math.random()*PLAYABLE_COLUMNS.length)];
-	this.y = PLAYABLE_ROWS[row];	
-};
-
+// global values for gameplay
+var playable_rows = [120, 203, 286];
+var playable_columns = [0, 101, 202, 303, 404];
+var collision_buffer_x = 60;
+var collision_buffer_y = 60;
 
 // Enemies our player must avoid
 var Enemy = function(row) {
     // Variables applied to each of our instances go here,
     // we've provided one for you to get started
 
-	this.x = PLAYABLE_COLUMNS[Math.floor(Math.random()*PLAYABLE_COLUMNS.length)];
+	this.x = playable_columns[Math.floor(Math.random()*playable_columns.length)];
 	this.y = row;
-	this.speed = moveable_speeds[Math.floor(Math.random()*moveable_speeds.length)];
+	this.speed = this.setSpeed();
 
-
-	this.x_min = PLAYABLE_COLUMNS[0]-150;
-	this.x_max = PLAYABLE_COLUMNS[PLAYABLE_COLUMNS.length-1]+150;
+	
+// Playable width for enemy units
+	this.x_min = playable_columns[0]-150;
+	this.x_max = playable_columns[playable_columns.length-1]+150;
 	
     // The image/sprite for our enemies, this uses
     // a helper we've provided to easily load images
@@ -41,9 +36,8 @@ Enemy.prototype.update = function(dt) {
 	if (this.x > this.x_max){
 		this.reset();
 	}
-	
+
 	this.checkCollision();
-	
 };
 
 
@@ -54,23 +48,30 @@ Enemy.prototype.render = function() {
 };
 
 
+// Sets enemy speed randomly from a set range of values
+
+Enemy.prototype.setSpeed = function(){
+	this.moveable_speeds = [350, 300, 275, 250, 200, 175, 150, 100, 70];
+	return this.moveable_speeds[Math.floor(Math.random()*this.moveable_speeds.length)];
+};
+
 // Reset the enemy once it moves off the screen.  Resets both speed and position
 
 Enemy.prototype.reset = function(){
 	this.x = this.x_min;
-	this.speed = moveable_speeds[Math.floor(Math.random()*moveable_speeds.length)];
+	this.speed = this.setSpeed();
 };
 
+// Checks for collisions with player and invokes 
+// gameProperties.enemyCollision if collision has occurred
 
 Enemy.prototype.checkCollision = function(){
-	if (player.x >= this.x - COLLISION_BUFFER_X && player.x <= this.x + COLLISION_BUFFER_X){
-	    if (player.y >= this.y - COLLISION_BUFFER_Y && player.y <= this.y + COLLISION_BUFFER_Y){
+	if (player.x >= this.x - collision_buffer_x && player.x <= this.x + collision_buffer_x){
+	    if (player.y >= this.y - collision_buffer_y && player.y <= this.y + collision_buffer_y){
 		gameProperties.enemyCollision();
 	    }
 	}
 };
-
-
 
 
 
@@ -89,17 +90,21 @@ var Player = function(default_x, default_y, x_max, x_min, y_max, y_min){
 	this.x_min = x_min || -100;
 	this.y_max = y_max || 440;
 	this.y_min = y_min || 50;
-	this.score = 0;    
 }
 
-
+// Updates player sprite assignment
 Player.prototype.update = function(){
 	this.sprite = gameProperties.availablePlayers[gameProperties.currentPlayer];
 };
 
+// Draws player on screen
 Player.prototype.render = function(){
 	ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
 };
+
+
+// Handles user input on keyboard when game is in play mode to navigate player
+// Calls gameProperties.waterCollision when player reaches the water
 
 Player.prototype.handleInput = function(key){
 	
@@ -117,40 +122,51 @@ Player.prototype.handleInput = function(key){
 	}	
 };
 
+
+// Resets player position 
+
 Player.prototype.reset = function(){
 	this.x = this.default_x;
 	this.y = this.default_y;
-
-	if (!gameProperties.gameStarted){
-		gameProperties.currentPlayer = 0;
-	}
 };
 
 
 
-// Extras
+// Extras that the player may collect for additional points
+// Constructor calls reset function to instantiate its 
+// sprite, x and y values with random values
 
 var Extra = function(){
 	this.reset();
 };
 
+// Function which updates extra and checks for player collisions
+
 Extra.prototype.update = function(){
 	this.checkCollision();
 };
 
+// Checks for player collisions and calls gameProperties.extraCollision if 
+// collision has occurred.
+
 Extra.prototype.checkCollision = function(){
-	if (player.x >= this.x - 50 && player.x <= this.x + 50){
-	    if (player.y >= this.y - 40 && player.y <= this.y + 40){
+	if (player.x >= this.x - collision_buffer_x && player.x <= this.x + collision_buffer_x){
+	    if (player.y >= this.y - collision_buffer_y && player.y <= this.y + collision_buffer_y){
 		gameProperties.extraCollision();
 	    }
 	}
 };
 
+// Resets extra to random row, column and sprite values
+
 Extra.prototype.reset = function(){
 	this.sprite = gameProperties.availableExtras[Math.floor(Math.random()*3)];
-	this.x = PLAYABLE_COLUMNS[Math.floor(Math.random()*5)];
-	this.y = PLAYABLE_ROWS[Math.floor(Math.random()*3)];
+	this.x = playable_columns[Math.floor(Math.random()*5)];
+	this.y = playable_rows[Math.floor(Math.random()*3)];
 };
+
+
+// Returns the point value for each sprite
 
 Extra.prototype.getValue = function(){
 
@@ -164,15 +180,21 @@ Extra.prototype.getValue = function(){
 
 };
 
+// Draws extras on screen
+
 Extra.prototype.render = function(){
 	ctx.drawImage(Resources.get(this.sprite), this.x, this.y);	
 };
 
 
+// Start Menu that shows before gameProperties.gameStarted is set to true
+// Displays How-to-Play information and point distribution
 
 var StartMenu = function(){
 	this.alpha = 0.90;
 };
+
+// Renders start menu on screen
 
 StartMenu.prototype.render = function(){
 	ctx.globalAlpha = this.alpha
@@ -238,9 +260,14 @@ StartMenu.prototype.render = function(){
 	ctx.globalAlpha = 1;
 };
 
+
+// Handles user input before gameProperties.gameStarted is set to true
+// Used to select player sprite and difficulty and to begin game.
+
 StartMenu.prototype.handleInput = function(key){
 
 	if (key === 'enter'){
+		gameProperties.setDifficulty();
 		gameProperties.gameStarted = true;
 
 	}else if (key === 'space'){
@@ -263,21 +290,26 @@ StartMenu.prototype.handleInput = function(key){
 		}else{
 			gameProperties.currentDifficulty = 3
 		}
-		gameProperties.setDifficulty();
 	}else if (key === 'down'){
 		if (gameProperties.availableDifficulty[gameProperties.currentDifficulty + 1]){
 			gameProperties.currentDifficulty++;
 		}else{
 			gameProperties.currentDifficulty = 1;
 		}
-		gameProperties.setDifficulty();
 	}
 
 };
 
+
+// Pause menu that is shown whenever gameProperties.gamePaused is true
+// Displayed whenever spacebar is pressured while game is in play mode
+
 var PauseMenu = function(){
 	this.alpha = 0.90;
 };
+
+
+// Renders pause menu on screen
 
 PauseMenu.prototype.render = function(){
 
@@ -311,16 +343,17 @@ PauseMenu.prototype.render = function(){
 
 };
 
+// Handles input when game is in pause mode
+// Allows user to reset game
+
 PauseMenu.prototype.handleInput = function(key){
 	if (key === 'enter'){
-		gameProperties.gameStarted = false;
-		gameProperties.gamePaused = false;
-		player.reset();
-		gameProperties.currentScore = 0;
-		gameProperties.highScore = 0;
+		gameProperties.reset();
 	}
 
 };
+
+// Class that holds basic game information
 
 var GameProperties = function(){
 
@@ -331,12 +364,6 @@ var GameProperties = function(){
 		'images/GemBlue.png', 
 		'images/GemGreen.png'
 	];
-
-	this.ExtrasValue = {
-		orange: 25,
-		blue: 50,
-		green: 75
-	};
 	
 	this.currentPlayer = 0;
 	this.availablePlayers = [
@@ -367,14 +394,36 @@ var GameProperties = function(){
 	
 };
 
-GameProperties.prototype.setDifficulty = function(){
-allEnemies = [];
-for (var i = 0; i < this.currentDifficulty; i++){
-	for (var j = 0; j < PLAYABLE_ROWS.length; j++){	
-		allEnemies.push(new Enemy(PLAYABLE_ROWS[j]));
-	}
-}
+// Resets game and returns to start menu
+
+GameProperties.prototype.reset = function(){
+		gameProperties.gameStarted = false;
+		gameProperties.gamePaused = false;
+		player.reset();
+		gameProperties.currentPlayer = 0;
+		gameProperties.currentDifficulty = 1;
+		gameProperties.currentScore = 0;
+		gameProperties.highScore = 0;
 };
+
+
+// Sets game difficulty by pushing new enemies to allEnemies
+// array according to level of difficulty selected.  
+// Resets allEnemies to an empty array each time it is called before building up
+// new enemy array
+
+GameProperties.prototype.setDifficulty = function(){
+	allEnemies = [];
+	for (var i = 0; i < this.currentDifficulty; i++){
+		for (var j = 0; j < playable_rows.length; j++){	
+			allEnemies.push(new Enemy(playable_rows[j]));
+		}
+	}
+};
+
+
+// Renders user’s current score on screen as well
+// as high score for that session
 
 GameProperties.prototype.renderScore = function(){
 	ctx.fillStyle = 'white';	
@@ -393,10 +442,8 @@ GameProperties.prototype.renderScore = function(){
 
 };
 
-
-GameProperties.prototype.resetScore = function(){
-	this.currentScore = 0;
-};
+// Handles resetting game properties in the event of an enemy collision
+// and plays enemy collision sound
 
 GameProperties.prototype.enemyCollision = function(){
 	this.sounds.enemy.play();
@@ -410,12 +457,18 @@ GameProperties.prototype.enemyCollision = function(){
 
 };
 
+// Handles resetting game properties in the event of an extra collision
+// and plays extra collision sound
+
 GameProperties.prototype.extraCollision = function(){
 	this.sounds.extra.play();
 	gameProperties.currentScore += currentExtra.getValue();
 	currentExtra.reset();
 
 };
+
+// Handles resetting game properties in the event of an water collision
+// and plays water collision sound
 
 GameProperties.prototype.waterCollision = function(){
 	this.sounds.water.play();
@@ -429,14 +482,28 @@ GameProperties.prototype.waterCollision = function(){
 // Place all enemy objects in an array called allEnemies
 // Place the player object in a variable called player
 
-var gameProperties = new GameProperties();
-var startMenu = new StartMenu();
-var pauseMenu = new PauseMenu();
-var allEnemies = [];
-var currentExtra = new Extra();
-gameProperties.setDifficulty();
 
+// GameProperties Object that holds basic game and player info
+var gameProperties = new GameProperties();
+
+// Start Menu object shows at the beginning of game
+var startMenu = new StartMenu();
+
+// Pause Menu shown when game is paused
+var pauseMenu = new PauseMenu();
+
+// Array holding all enemy objects, filled by gameProperties.setDifficulty
+var allEnemies = [];
+
+// Object holding current Extra on screen
+// In this version only one extra may be on screen at once
+var currentExtra = new Extra();
+
+
+// New player object
 var player = new Player(205, 440, 400, 65, 440, 50);
+
+
 
 // This listens for key presses and sends the keys to your
 // Player.handleInput() method. You don't need to modify this.
@@ -451,14 +518,20 @@ document.addEventListener('keyup', function(e) {
         40: 'down'
     };
 	
+	// Switches paused value whenever the spacebar is pressed
 	if (allowedKeys[e.keyCode] == 'space'){
 		gameProperties.gamePaused = !gameProperties.gamePaused;
 	}
 
+	// If game is not started, start menu will handle user input
 	if (!gameProperties.gameStarted){
 		startMenu.handleInput(allowedKeys[e.keyCode]);
+
+	// If game is paused, pause menu will handle user input
 	} else if (gameProperties.gamePaused){
 		pauseMenu.handleInput(allowedKeys[e.keyCode]);
+
+	// Otherwise, player will handle user input
 	} else {
     		player.handleInput(allowedKeys[e.keyCode]);
 	}

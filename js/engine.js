@@ -80,8 +80,6 @@ var Engine = (function(global) {
      */
     function update(dt) {
         updateEntities(dt);
-	updateExtras();
-        // checkCollisions();
     }
 
     /* This is called by the update function  and loops through all of the
@@ -97,12 +95,10 @@ var Engine = (function(global) {
             enemy.update(dt);
         });
         player.update();
+	currentExtra.update();
 	}
     }
 
-    function updateExtras() {
-        currentExtra.update();
-    }
 
     /* This function initially draws the "game level", it will then call
      * the renderEntities function. Remember, this function is called every
@@ -155,18 +151,16 @@ var Engine = (function(global) {
      */
     function renderEntities() {
         /* Loop through all of the objects within the allEnemies array and call
-         * the render function you have defined.
+         * the render function you have defined. Renders player, extras and
+	 * start and pause menus when appropriate.
          */
 	if (!gameProperties.gameStarted){
-		
 		startMenu.render();
-		
 	}else{
 		currentExtra.render();
         	allEnemies.forEach(function(enemy) {
             		enemy.render();
         	});
-
 	}
 	
 	player.render();
@@ -177,13 +171,10 @@ var Engine = (function(global) {
 
     }
 
-    function renderExtras(){
-
-    }
-
     /* This function does nothing but it could have been a good place to
      * handle game reset states - maybe a new game menu or a game over screen
      * those sorts of things. It's only called once by the init() method.
+     * Reset is handled by GameProperties object
      */
     function reset() {
         // noop
@@ -208,7 +199,6 @@ var Engine = (function(global) {
 	'images/GemOrange.png',
 	'images/Key.png',
 	'images/Star.png',
-	'images/game-over.png',
 	'images/GemOrangeMini.png',
 	'images/GemBlueMini.png',
 	'images/GemGreenMini.png',
