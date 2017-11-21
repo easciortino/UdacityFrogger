@@ -30,7 +30,4 @@ for self-checking their submission.
 ```bash
 git commit -m "BOMA-### My Commit Message"
 ```
-* PRs (where ### is a ticket number)
-```bash
-[BOMA-###] My PR Title
-```
+* PRs (where ### is a ticket number) `[BOMA-###] My PR Title`
