@@ -32,5 +32,5 @@ git commit -m "BOMA-### My Commit Message"
 ```
 * PRs (where ### is a ticket number)
 ```bash
-\[BOMA-###] My PR Title
+[BOMA-###] My PR Title
 ```
