@@ -25,3 +25,12 @@ Frogger-game built as project for Hack Reactor + Udacity course.
 Students should use this rubric: https://www.udacity.com/course/viewer#!/c-ud015/l-3072058665/m-3072588797
 
 for self-checking their submission.
+
+* Commits (where ### is a ticket number)
+```bash
+git commit -m "BOMA-### My Commit Message"
+```
+* PRs (where ### is a ticket number)
+```bash
+\[BOMA-###] My PR Title
+```
